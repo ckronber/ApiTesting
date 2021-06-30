@@ -16,20 +16,38 @@ namespace ApiTest
 
             string[] Crypto = CryptoVals.Split(',');
 
-            string cryptoInfo = getCryptoPrice(Crypto,"USD");
+            //string cryptoInfo = getMultiCryptoPrice(Crypto,"USD");
+            decimal cryptoInfo = getSingleCryptoPrice(Crypto[0], "USD");
 
-            Console.WriteLine(cryptoInfo);
+            Console.WriteLine(Crypto[0]+ ": $"+ cryptoInfo);
 
-            CryptoRead readCrypto = JsonSerializer.DeserializeFromString<CryptoRead>(cryptoInfo);
 
-            Console.WriteLine(readCrypto.CryptoName);
-            Console.WriteLine(readCrypto.CryptoPrice);
+            //CryptoRead readCrypto = JsonSerializer.DeserializeFromString<CryptoRead>(cryptoInfo);
+            //Console.WriteLine(readCrypto.USD);
+           // Console.WriteLine(readCrypto.CryptoPrice);
+
 
             Console.WriteLine("\n\nPress Enter to Continue");
             Console.ReadKey();
         }
 
-        static string getCryptoPrice(IEnumerable<string> cryptoTicker, string CurrencyTicker)
+
+        static decimal getSingleCryptoPrice(string cryptoTicker, string CurrencyTicker)
+        {
+            string webstring = "https://min-api.cryptocompare.com/data/price?fsym=";
+
+            webstring += cryptoTicker +"&tsyms=" + CurrencyTicker;
+
+            var client = new RestClient(webstring);
+            client.Timeout = -1;
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+
+            CryptoRead readCrypto = JsonSerializer.DeserializeFromString<CryptoRead>(response.Content);
+            return readCrypto.USD;
+        }
+
+        static string getMultiCryptoPrice(IEnumerable<string> cryptoTicker, string CurrencyTicker)
         {
             string cryptoString = "";
             string webstring = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=";
@@ -46,7 +64,7 @@ namespace ApiTest
 
             cryptoString += "&tsyms=" + CurrencyTicker;
 
-            var client = new RestClient(webstring+cryptoString);
+            var client = new RestClient(webstring + cryptoString);
 
             client.Timeout = -1;
             var request = new RestRequest(Method.GET);
@@ -56,10 +74,11 @@ namespace ApiTest
         }
     }
 
+   
     public class CryptoRead
     {
-        public string CryptoName { get; set; }
-        public Dictionary<string,decimal> CryptoPrice { get; set; }
+        public decimal USD { get; set; }
+        public decimal JPY { get; set; }
     }
     
 }
